@@ -1,0 +1,284 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    // Get the product ID from the params
+    const productId = params.id;
+    
+    // Log the product ID to help with debugging
+    console.log("API GET - Product ID:", productId);
+    
+    // Check if the product ID is valid
+    if (!productId || productId === "unknown" || productId === "undefined") {
+      console.error("Invalid product ID in API route:", productId);
+      return NextResponse.json(
+        { error: "Invalid product ID" },
+        { status: 400 }
+      );
+    }
+
+    // Use Prisma to fetch the product with its category
+    const product = await prisma.product.findUnique({
+      where: { 
+        id: productId 
+      },
+      include: {
+        category: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      }
+    });
+
+    // Log the result
+    console.log("API: Product query result:", product ? "Found" : "Not found");
+
+    // If no product is found, return a 404
+    if (!product) {
+      return NextResponse.json(
+        { error: `Product not found with ID: ${productId}` },
+        { status: 404 }
+      );
+    }
+
+    // Return the product
+    return NextResponse.json({ product });
+  } catch (error) {
+    console.error("Error fetching product:", error);
+
+    // Provide more detailed error message
+    let errorMessage = "Failed to fetch product";
+    if (error instanceof Error) {
+      errorMessage += `: ${error.message}`;
+      console.error("Error stack:", error.stack);
+    }
+
+    return NextResponse.json(
+      { error: errorMessage },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    // Get the product ID from the params
+    const productId = params.id;
+    
+    // Log the product ID to help with debugging
+    console.log("API PUT - Product ID:", productId);
+    
+    // Check if the product ID is valid
+    if (!productId || productId === "unknown" || productId === "undefined") {
+      console.error("Invalid product ID in API PUT route:", productId);
+      return NextResponse.json(
+        { error: "Invalid product ID" },
+        { status: 400 }
+      );
+    }
+
+    const data = await req.json();
+    const {
+      name,
+      sku,
+      description,
+      categoryId,
+      costPrice,
+      wholesalePrice,
+      retailPrice,
+      minStockLevel,
+      reorderPoint,
+      barcode,
+      isActive,
+    } = data;
+
+    // Validate required fields
+    if (!name || !sku || !categoryId || costPrice === undefined || wholesalePrice === undefined || retailPrice === undefined) {
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    // Check if product exists
+    const existingProduct = await prisma.product.findUnique({
+      where: { id: productId }
+    });
+
+    if (!existingProduct) {
+      return NextResponse.json(
+        { error: "Product not found" },
+        { status: 404 }
+      );
+    }
+
+    try {
+      // Update product using Prisma
+      const updatedProduct = await prisma.product.update({
+        where: { id: productId },
+        data: {
+          name,
+          sku,
+          description,
+          category: {
+            connect: { id: categoryId }
+          },
+          costPrice,
+          wholesalePrice,
+          retailPrice,
+          minStockLevel,
+          reorderPoint,
+          barcode: barcode || null,
+          isActive: isActive !== undefined ? isActive : true,
+          updatedById: session.user.id
+        },
+        include: {
+          category: {
+            select: {
+              id: true,
+              name: true
+            }
+          }
+        }
+      });
+
+      // Return the updated product
+      return NextResponse.json({ product: updatedProduct });
+    } catch (updateError) {
+      console.error('Error updating product:', updateError);
+      
+      // Provide more detailed error message
+      let errorMessage = "Failed to update product";
+      if (updateError instanceof Error) {
+        errorMessage += `: ${updateError.message}`;
+        console.error("Error stack:", updateError.stack);
+      }
+      
+      return NextResponse.json(
+        { error: errorMessage },
+        { status: 500 }
+      );
+    }
+  } catch (error) {
+    console.error("Error processing update request:", error);
+
+    // Provide more detailed error message
+    let errorMessage = "Failed to process update request";
+    if (error instanceof Error) {
+      errorMessage += `: ${error.message}`;
+      console.error("Error stack:", error.stack);
+    }
+
+    return NextResponse.json(
+      { error: errorMessage },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    // Get the product ID from the params
+    const productId = params.id;
+
+    // Log the product ID to help with debugging
+    console.log("API DELETE - Product ID:", productId);
+
+    // Check if the product ID is valid
+    if (!productId || productId === "unknown" || productId === "undefined") {
+      console.error("Invalid product ID in API DELETE route:", productId);
+      return NextResponse.json(
+        { error: "Invalid product ID" },
+        { status: 400 }
+      );
+    }
+
+    // Check if product exists using Prisma
+    const existingProduct = await prisma.product.findUnique({
+      where: { id: productId }
+    });
+
+    if (!existingProduct) {
+      return NextResponse.json(
+        { error: "Product not found" },
+        { status: 404 }
+      );
+    }
+
+    // Check if product is used in inventory
+    const inventoryItem = await prisma.inventoryItem.findFirst({
+      where: { productId }
+    });
+
+    if (inventoryItem) {
+      // Instead of deleting, mark as inactive
+      const updatedProduct = await prisma.product.update({
+        where: { id: productId },
+        data: {
+          isActive: false,
+          updatedById: session.user.id
+        }
+      });
+
+      return NextResponse.json({
+        product: updatedProduct,
+        message: "Product marked as inactive because it is used in inventory",
+      });
+    }
+
+    // Delete product using Prisma
+    await prisma.product.delete({
+      where: { id: productId }
+    });
+
+    return NextResponse.json({
+      message: "Product deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting product:", error);
+    
+    // Provide more detailed error message
+    let errorMessage = "Failed to delete product";
+    if (error instanceof Error) {
+      errorMessage += `: ${error.message}`;
+      console.error("Error stack:", error.stack);
+    }
+    
+    return NextResponse.json(
+      { error: errorMessage },
+      { status: 500 }
+    );
+  }
+}

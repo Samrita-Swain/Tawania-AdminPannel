@@ -1,0 +1,179 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: #4f4f4f;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Print styles for return receipts */
+@media print {
+  /* Hide sidebar, header, and navigation elements */
+  .flex.h-screen.bg-gray-50 > div:first-child,
+  header,
+  nav,
+  .sidebar,
+  [class*="sidebar"],
+  [class*="header"],
+  .print-hide {
+    display: none !important;
+  }
+
+  /* Make main content full width */
+  .flex.h-screen.bg-gray-50 {
+    display: block !important;
+  }
+
+  .flex.flex-1.flex-col.overflow-hidden {
+    display: block !important;
+    overflow: visible !important;
+  }
+
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* Print-specific styling for the return receipt */
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 12pt !important;
+    line-height: 1.4 !important;
+  }
+
+  .space-y-6 > * + * {
+    margin-top: 1rem !important;
+  }
+
+  /* Hide interactive elements */
+  button,
+  .print-hide,
+  textarea:disabled {
+    display: none !important;
+  }
+
+  /* Style cards for print */
+  .bg-white,
+  .border {
+    border: 1px solid #000 !important;
+    box-shadow: none !important;
+  }
+
+  /* Table styling for print */
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+
+  th, td {
+    border: 1px solid #000 !important;
+    padding: 8px !important;
+  }
+
+  /* Add company header for print */
+  .print-header {
+    display: block !important;
+    text-align: center !important;
+    margin-bottom: 2rem !important;
+    border-bottom: 2px solid #000 !important;
+    padding-bottom: 1rem !important;
+  }
+}
+
+/* Hide print header on screen */
+.print-header {
+  display: none;
+}
+
+/* Mobile responsive utilities */
+@media (max-width: 640px) {
+  /* Ensure tables are scrollable on mobile */
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Make forms more mobile friendly */
+  .form-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  /* Adjust modal sizes for mobile */
+  .modal-content {
+    margin: 1rem !important;
+    max-height: calc(100vh - 2rem) !important;
+    overflow-y: auto !important;
+  }
+
+  /* Make buttons more touch-friendly */
+  button, .btn {
+    min-height: 44px;
+    padding: 0.75rem 1rem;
+  }
+
+  /* Improve text readability on mobile */
+  .text-xs {
+    font-size: 0.75rem !important;
+  }
+
+  .text-sm {
+    font-size: 0.875rem !important;
+  }
+}
+
+/* Tablet responsive utilities */
+@media (min-width: 641px) and (max-width: 1024px) {
+  /* Adjust grid layouts for tablets */
+  .tablet-grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .tablet-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Touch device improvements */
+@media (hover: none) and (pointer: coarse) {
+  /* Larger touch targets */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Remove hover effects on touch devices */
+  .hover\:bg-gray-100:hover {
+    background-color: inherit;
+  }
+
+  /* Better focus states for touch */
+  button:focus,
+  input:focus,
+  select:focus,
+  textarea:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+  }
+}

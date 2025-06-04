@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tawania Admin Panel</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .login-container {
+      max-width: 400px;
+      margin: 100px auto;
+      padding: 20px;
+      background-color: white;
+      border-radius: 5px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .dashboard-container {
+      display: none;
+    }
+    
+    h1 {
+      color: #333;
+      text-align: center;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    
+    input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    
+    button:hover {
+      background-color: #45a049;
+    }
+    
+    .error-message {
+      color: red;
+      margin-top: 10px;
+    }
+    
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #ddd;
+      margin-bottom: 20px;
+    }
+    
+    .user-info {
+      display: flex;
+      align-items: center;
+    }
+    
+    .user-info img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+    
+    .stats-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    
+    .stat-card {
+      background-color: white;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stat-card h3 {
+      margin-top: 0;
+      color: #666;
+    }
+    
+    .stat-card p {
+      font-size: 24px;
+      font-weight: bold;
+      margin: 10px 0 0;
+      color: #333;
+    }
+    
+    .card {
+      background-color: white;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    th, td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    th {
+      background-color: #f8f8f8;
+    }
+    
+    .sidebar {
+      width: 250px;
+      background-color: #333;
+      color: white;
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      padding-top: 20px;
+    }
+    
+    .sidebar-header {
+      padding: 0 20px 20px;
+      border-bottom: 1px solid #444;
+    }
+    
+    .sidebar-menu {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .sidebar-menu li {
+      padding: 15px 20px;
+      border-bottom: 1px solid #444;
+      cursor: pointer;
+    }
+    
+    .sidebar-menu li:hover {
+      background-color: #444;
+    }
+    
+    .main-content {
+      margin-left: 250px;
+      padding: 20px;
+    }
+    
+    .low-stock {
+      color: red;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Login Form -->
+    <div id="login-container" class="login-container">
+      <h1>Tawania Admin Panel</h1>
+      <form id="login-form">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required>
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" required>
+        </div>
+        <button type="submit">Login</button>
+        <p id="error-message" class="error-message"></p>
+      </form>
+    </div>
+    
+    <!-- Dashboard -->
+    <div id="dashboard-container" class="dashboard-container">
+      <div class="sidebar">
+        <div class="sidebar-header">
+          <h2>Tawania Admin</h2>
+        </div>
+        <ul class="sidebar-menu">
+          <li>Dashboard</li>
+          <li>Products</li>
+          <li>Inventory</li>
+          <li>Orders</li>
+          <li>Customers</li>
+          <li>Sales</li>
+          <li>Reports</li>
+          <li>Settings</li>
+          <li id="logout-btn">Logout</li>
+        </ul>
+      </div>
+      
+      <div class="main-content">
+        <div class="header">
+          <h1>Dashboard</h1>
+          <div class="user-info">
+            <img src="https://via.placeholder.com/40" alt="User Avatar">
+            <span id="user-name">Rajesh Kumar</span>
+          </div>
+        </div>
+        
+        <div class="stats-container">
+          <div class="stat-card">
+            <h3>Total Sales</h3>
+            <p id="total-sales">₹0</p>
+          </div>
+          <div class="stat-card">
+            <h3>Total Orders</h3>
+            <p id="total-orders">0</p>
+          </div>
+          <div class="stat-card">
+            <h3>Total Customers</h3>
+            <p id="total-customers">0</p>
+          </div>
+          <div class="stat-card">
+            <h3>Total Products</h3>
+            <p id="total-products">0</p>
+          </div>
+        </div>
+        
+        <div class="row">
+          <div class="card">
+            <h2>Recent Sales</h2>
+            <table id="recent-sales-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Customer</th>
+                  <th>Amount</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Sales data will be inserted here -->
+              </tbody>
+            </table>
+          </div>
+          
+          <div class="card">
+            <h2>Low Stock Items</h2>
+            <table id="low-stock-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Product</th>
+                  <th>Current Stock</th>
+                  <th>Min Stock</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Low stock data will be inserted here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const loginForm = document.getElementById('login-form');
+      const errorMessage = document.getElementById('error-message');
+      const loginContainer = document.getElementById('login-container');
+      const dashboardContainer = document.getElementById('dashboard-container');
+      const userName = document.getElementById('user-name');
+      const logoutBtn = document.getElementById('logout-btn');
+      
+      // Check if user is already logged in
+      const user = JSON.parse(localStorage.getItem('user'));
+      if (user) {
+        showDashboard(user);
+        fetchDashboardData();
+      }
+      
+      // Login form submission
+      loginForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        
+        // For demo purposes, hardcoded credentials
+        if (email === 'admin@tawania.com' && password === 'admin123') {
+          const user = {
+            id: '1',
+            name: 'Rajesh Kumar',
+            email: 'admin@tawania.com',
+            role: 'ADMIN'
+          };
+          
+          localStorage.setItem('user', JSON.stringify(user));
+          showDashboard(user);
+          fetchDashboardData();
+        } else {
+          errorMessage.textContent = 'Invalid email or password';
+        }
+      });
+      
+      // Logout button
+      logoutBtn.addEventListener('click', function() {
+        localStorage.removeItem('user');
+        dashboardContainer.style.display = 'none';
+        loginContainer.style.display = 'block';
+        document.getElementById('email').value = '';
+        document.getElementById('password').value = '';
+        errorMessage.textContent = '';
+      });
+      
+      function showDashboard(user) {
+        loginContainer.style.display = 'none';
+        dashboardContainer.style.display = 'block';
+        userName.textContent = user.name;
+      }
+      
+      function fetchDashboardData() {
+        // Mock dashboard data
+        const dashboardData = {
+          stats: {
+            totalSales: 12500,
+            totalOrders: 150,
+            totalCustomers: 75,
+            totalProducts: 200
+          },
+          recentSales: [
+            { id: '1', customer: 'John Doe', amount: 250, date: '2023-05-18' },
+            { id: '2', customer: 'Jane Smith', amount: 120, date: '2023-05-17' },
+            { id: '3', customer: 'Bob Johnson', amount: 350, date: '2023-05-16' }
+          ],
+          lowStockItems: [
+            { id: '1', name: 'Product A', stock: 5, minStock: 10 },
+            { id: '2', name: 'Product B', stock: 3, minStock: 15 },
+            { id: '3', name: 'Product C', stock: 8, minStock: 20 }
+          ]
+        };
+        
+        updateDashboard(dashboardData);
+      }
+      
+      function updateDashboard(data) {
+        // Update stats
+        document.getElementById('total-sales').textContent = '₹' + data.stats.totalSales;
+        document.getElementById('total-orders').textContent = data.stats.totalOrders;
+        document.getElementById('total-customers').textContent = data.stats.totalCustomers;
+        document.getElementById('total-products').textContent = data.stats.totalProducts;
+        
+        // Update recent sales table
+        const recentSalesTable = document.getElementById('recent-sales-table').getElementsByTagName('tbody')[0];
+        recentSalesTable.innerHTML = '';
+        
+        data.recentSales.forEach(sale => {
+          const row = recentSalesTable.insertRow();
+          row.innerHTML = `
+            <td>${sale.id}</td>
+            <td>${sale.customer}</td>
+            <td>₹${sale.amount}</td>
+            <td>${sale.date}</td>
+          `;
+        });
+        
+        // Update low stock table
+        const lowStockTable = document.getElementById('low-stock-table').getElementsByTagName('tbody')[0];
+        lowStockTable.innerHTML = '';
+        
+        data.lowStockItems.forEach(item => {
+          const row = lowStockTable.insertRow();
+          const stockClass = item.stock < item.minStock ? 'low-stock' : '';
+          
+          row.innerHTML = `
+            <td>${item.id}</td>
+            <td>${item.name}</td>
+            <td class="${stockClass}">${item.stock}</td>
+            <td>${item.minStock}</td>
+          `;
+        });
+      }
+    });
+  </script>
+</body>
+</html>

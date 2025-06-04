@@ -1,0 +1,16 @@
+{
+  "storeId": "cmb7q8j9k0000ugc4zn650o9p",
+  "items": [
+    {
+      "productId": "cmb7m96o40003ugo4d8dpx8dj",
+      "quantity": 1,
+      "unitPrice": 1500,
+      "totalPrice": 1500,
+      "reason": "Wrong Item",
+      "condition": "GOOD"
+    }
+  ],
+  "reason": "Wrong Item",
+  "notes": "Test return",
+  "refundMethod": "CASH"
+}

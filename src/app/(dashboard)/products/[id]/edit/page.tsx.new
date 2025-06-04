@@ -1,0 +1,465 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+
+export default function EditProductPage({
+  params,
+}: {
+  params: { id: string };
+}) {
+  const router = useRouter();
+  const productId = params.id;
+
+  // State for data
+  const [categories, setCategories] = useState<any[]>([]);
+  const [product, setProduct] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Form state
+  const [name, setName] = useState("");
+  const [sku, setSku] = useState("");
+  const [description, setDescription] = useState("");
+  const [categoryId, setCategoryId] = useState("");
+  const [costPrice, setCostPrice] = useState(0);
+  const [wholesalePrice, setWholesalePrice] = useState(0);
+  const [retailPrice, setRetailPrice] = useState(0);
+  const [minStockLevel, setMinStockLevel] = useState(10);
+  const [reorderPoint, setReorderPoint] = useState(5);
+  const [barcode, setBarcode] = useState("");
+  const [isActive, setIsActive] = useState(true);
+  const [condition, setCondition] = useState("NEW");
+
+  // Check if the product ID is valid
+  useEffect(() => {
+    if (!productId || productId === "unknown" || productId === "undefined") {
+      console.error("Invalid product ID:", productId);
+      alert("Invalid product ID. Redirecting to products list.");
+      router.push("/products");
+    }
+  }, [productId, router]);
+
+  // Fetch product and categories
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!productId || productId === "unknown" || productId === "undefined") {
+        return; // Skip fetching if ID is invalid
+      }
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        // Fetch product
+        console.log("Fetching product data for ID:", productId);
+
+        const productResponse = await fetch(`/api/products/${productId}`);
+        console.log("Product response status:", productResponse.status);
+
+        if (!productResponse.ok) {
+          const errorText = await productResponse.text();
+          console.error("Error response:", errorText);
+
+          let errorMessage = "Failed to fetch product";
+          try {
+            const errorData = JSON.parse(errorText);
+            if (errorData.error) {
+              errorMessage = errorData.error;
+            }
+          } catch (e) {
+            // If we can't parse the error, use the default message
+          }
+
+          throw new Error(errorMessage);
+        }
+
+        const productData = await productResponse.json();
+        console.log("Successfully fetched product data:", productData);
+
+        if (!productData.product) {
+          throw new Error("Invalid product data received");
+        }
+
+        // Set product data
+        setProduct(productData.product);
+
+        // Set form state
+        setName(productData.product.name || "");
+        setSku(productData.product.sku || "");
+        setDescription(productData.product.description || "");
+        setCategoryId(productData.product.categoryId || "");
+        setCostPrice(productData.product.costPrice || 0);
+        setWholesalePrice(productData.product.wholesalePrice || 0);
+        setRetailPrice(productData.product.retailPrice || 0);
+        setMinStockLevel(productData.product.minStockLevel || 0);
+        setReorderPoint(productData.product.reorderPoint || 0);
+        setBarcode(productData.product.barcode || "");
+        setIsActive(productData.product.isActive !== false);
+        setCondition("NEW"); // Default value
+
+        // Fetch categories
+        const categoriesResponse = await fetch('/api/categories');
+        if (!categoriesResponse.ok) {
+          throw new Error('Failed to fetch categories');
+        }
+
+        const categoriesData = await categoriesResponse.json();
+        setCategories(categoriesData.categories || []);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        setError(error instanceof Error ? error.message : 'Unknown error');
+
+        // Show error message
+        alert(`Error loading product data: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`);
+
+        // Navigate back to products list
+        router.push('/products');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [productId, router]);
+
+  // Handle form submission
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!name || !sku || !categoryId || costPrice <= 0 || wholesalePrice <= 0 || retailPrice <= 0) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const productData = {
+        name,
+        sku,
+        description,
+        categoryId,
+        costPrice,
+        wholesalePrice,
+        retailPrice,
+        minStockLevel,
+        reorderPoint,
+        barcode: barcode || undefined,
+        isActive,
+      };
+
+      console.log('Submitting product update with data:', productData);
+
+      const response = await fetch(`/api/products/${productId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(productData),
+      });
+
+      console.log('Response status:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+
+        let errorMessage = 'Failed to update product';
+        try {
+          const errorData = JSON.parse(errorText);
+          if (errorData.error) {
+            errorMessage = errorData.error;
+          }
+        } catch (e) {
+          // If we can't parse the error, use the default message
+        }
+
+        throw new Error(errorMessage);
+      }
+
+      const result = await response.json();
+      console.log('Success response:', result);
+
+      // Show success message
+      alert('Product updated successfully!');
+
+      // Redirect to product details page
+      router.push(`/products/${productId}`);
+    } catch (error) {
+      console.error('Error updating product:', error);
+      setError(error instanceof Error ? error.message : 'Unknown error');
+
+      // Show error message
+      alert(`Failed to update product: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex h-64 items-center justify-center rounded-lg bg-white p-6 shadow-md">
+        <div className="text-center">
+          <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600 mx-auto"></div>
+          <p className="text-gray-500">Loading data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex h-64 items-center justify-center rounded-lg bg-white p-6 shadow-md">
+        <div className="text-center">
+          <h2 className="text-xl font-bold text-red-600 mb-2">Error</h2>
+          <p className="text-gray-700 mb-4">{error}</p>
+          <Button onClick={() => router.push('/products')}>
+            Return to Products
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="flex h-64 items-center justify-center rounded-lg bg-white p-6 shadow-md">
+        <div className="text-center">
+          <h2 className="text-xl font-bold text-red-600 mb-2">Product Not Found</h2>
+          <p className="text-gray-700 mb-4">The requested product could not be found.</p>
+          <Button onClick={() => router.push('/products')}>
+            Return to Products
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-gray-800">Edit Product</h1>
+        <Link
+          href={`/products/${productId}`}
+          className="rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-200 transition-colors"
+        >
+          Back to Product
+        </Link>
+      </div>
+
+      <form onSubmit={handleSubmit} className="rounded-lg bg-white p-6 shadow-md">
+        <div className="grid gap-6 md:grid-cols-2">
+          <div className="md:col-span-2">
+            <label htmlFor="name" className="mb-1 block text-sm font-medium text-gray-800">
+              Product Name *
+            </label>
+            <input
+              id="name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label htmlFor="sku" className="mb-1 block text-sm font-medium text-gray-800">
+              SKU *
+            </label>
+            <input
+              id="sku"
+              type="text"
+              value={sku}
+              onChange={(e) => setSku(e.target.value)}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label htmlFor="category" className="mb-1 block text-sm font-medium text-gray-800">
+              Category *
+            </label>
+            <select
+              id="category"
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              required
+            >
+              <option value="">Select Category</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="md:col-span-2">
+            <label htmlFor="description" className="mb-1 block text-sm font-medium text-gray-800">
+              Description
+            </label>
+            <textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="costPrice" className="mb-1 block text-sm font-medium text-gray-800">
+              Cost Price *
+            </label>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-800">$</span>
+              <input
+                id="costPrice"
+                type="number"
+                value={costPrice}
+                onChange={(e) => setCostPrice(Number(e.target.value))}
+                min="0"
+                step="0.01"
+                className="w-full rounded-md border border-gray-300 pl-8 pr-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="wholesalePrice" className="mb-1 block text-sm font-medium text-gray-800">
+              Wholesale Price *
+            </label>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-800">$</span>
+              <input
+                id="wholesalePrice"
+                type="number"
+                value={wholesalePrice}
+                onChange={(e) => setWholesalePrice(Number(e.target.value))}
+                min="0"
+                step="0.01"
+                className="w-full rounded-md border border-gray-300 pl-8 pr-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="retailPrice" className="mb-1 block text-sm font-medium text-gray-800">
+              Retail Price *
+            </label>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-800">$</span>
+              <input
+                id="retailPrice"
+                type="number"
+                value={retailPrice}
+                onChange={(e) => setRetailPrice(Number(e.target.value))}
+                min="0"
+                step="0.01"
+                className="w-full rounded-md border border-gray-300 pl-8 pr-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="minStockLevel" className="mb-1 block text-sm font-medium text-gray-800">
+              Min Stock Level
+            </label>
+            <input
+              id="minStockLevel"
+              type="number"
+              value={minStockLevel}
+              onChange={(e) => setMinStockLevel(Number(e.target.value))}
+              min="0"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="reorderPoint" className="mb-1 block text-sm font-medium text-gray-800">
+              Reorder Point
+            </label>
+            <input
+              id="reorderPoint"
+              type="number"
+              value={reorderPoint}
+              onChange={(e) => setReorderPoint(Number(e.target.value))}
+              min="0"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="barcode" className="mb-1 block text-sm font-medium text-gray-800">
+              Barcode
+            </label>
+            <input
+              id="barcode"
+              type="text"
+              value={barcode}
+              onChange={(e) => setBarcode(e.target.value)}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="isActive" className="mb-1 block text-sm font-medium text-gray-800">
+              Status
+            </label>
+            <select
+              id="isActive"
+              value={isActive ? "active" : "inactive"}
+              onChange={(e) => setIsActive(e.target.value === "active")}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="condition" className="mb-1 block text-sm font-medium text-gray-800">
+              Product Condition
+            </label>
+            <select
+              id="condition"
+              value={condition}
+              onChange={(e) => setCondition(e.target.value)}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="NEW">New Product</option>
+              <option value="DAMAGED">Damaged Product</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="mt-6 flex justify-end gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.push(`/products/${productId}`)}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            isLoading={isSubmitting}
+            disabled={isSubmitting}
+          >
+            Update Product
+          </Button>
+        </div>
+      </form>
+    </div>
+  );

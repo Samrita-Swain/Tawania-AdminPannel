@@ -1,0 +1,176 @@
+// Loyalty Program Extensions
+model LoyaltyProgram {
+  id                String              @id @default(cuid())
+  name              String
+  description       String?
+  pointsPerCurrency Decimal             @default(1) @db.Decimal(10, 2) // e.g., 1 point per $1
+  minimumPurchase   Decimal?            @db.Decimal(10, 2) // Minimum purchase to earn points
+  isActive          Boolean             @default(true)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  tiers             LoyaltyProgramTier[]
+  rules             LoyaltyProgramRule[]
+  transactions      LoyaltyTransaction[]
+  promotions        CustomerPromotion[]
+}
+
+model LoyaltyProgramTier {
+  id                String          @id @default(cuid())
+  programId         String
+  program           LoyaltyProgram  @relation(fields: [programId], references: [id])
+  name              String
+  description       String?
+  requiredPoints    Int
+  pointsMultiplier  Decimal         @default(1) @db.Decimal(5, 2)
+  benefits          String?         // JSON array of benefits
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+}
+
+model LoyaltyProgramRule {
+  id                String          @id @default(cuid())
+  programId         String
+  program           LoyaltyProgram  @relation(fields: [programId], references: [id])
+  name              String
+  description       String?
+  type              LoyaltyRuleType
+  conditions        String?         // JSON object with conditions
+  pointsAwarded     Int
+  isActive          Boolean         @default(true)
+  startDate         DateTime?
+  endDate           DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+}
+
+enum LoyaltyRuleType {
+  PURCHASE
+  FIRST_PURCHASE
+  BIRTHDAY
+  REFERRAL
+  PRODUCT_CATEGORY
+  SPECIFIC_PRODUCT
+  PURCHASE_FREQUENCY
+  CUSTOM
+}
+
+model LoyaltyTransaction {
+  id                String          @id @default(cuid())
+  customerId        String
+  customer          Customer        @relation(fields: [customerId], references: [id])
+  programId         String
+  program           LoyaltyProgram  @relation(fields: [programId], references: [id])
+  points            Int
+  type              LoyaltyTransactionType
+  description       String?
+  saleId            String?
+  sale              Sale?           @relation(fields: [saleId], references: [id])
+  expiryDate        DateTime?
+  createdAt         DateTime        @default(now())
+}
+
+enum LoyaltyTransactionType {
+  EARN
+  REDEEM
+  EXPIRE
+  ADJUST
+  BONUS
+}
+
+model CustomerPromotion {
+  id                String          @id @default(cuid())
+  name              String
+  description       String?
+  type              PromotionType
+  discountValue     Decimal         @db.Decimal(10, 2)
+  isPercentage      Boolean         @default(false)
+  code              String?
+  minimumPurchase   Decimal?        @db.Decimal(10, 2)
+  programId         String?
+  program           LoyaltyProgram? @relation(fields: [programId], references: [id])
+  requiredLoyaltyTier LoyaltyTier?
+  startDate         DateTime
+  endDate           DateTime
+  isActive          Boolean         @default(true)
+  usageLimit        Int?            // Maximum number of times the promotion can be used
+  usageCount        Int             @default(0)
+  applicableProducts String?        // JSON array of product IDs
+  applicableCategories String?      // JSON array of category IDs
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  redemptions       PromotionRedemption[]
+}
+
+enum PromotionType {
+  DISCOUNT_AMOUNT
+  DISCOUNT_PERCENTAGE
+  FREE_SHIPPING
+  BUY_X_GET_Y
+  BUNDLE_DISCOUNT
+  LOYALTY_POINTS_MULTIPLIER
+}
+
+model PromotionRedemption {
+  id                String            @id @default(cuid())
+  promotionId       String
+  promotion         CustomerPromotion @relation(fields: [promotionId], references: [id])
+  customerId        String
+  customer          Customer          @relation(fields: [customerId], references: [id])
+  saleId            String
+  sale              Sale              @relation(fields: [saleId], references: [id])
+  discountAmount    Decimal           @db.Decimal(10, 2)
+  createdAt         DateTime          @default(now())
+}
+
+// Customer Extensions
+model CustomerAddress {
+  id                String          @id @default(cuid())
+  customerId        String
+  customer          Customer        @relation(fields: [customerId], references: [id])
+  addressType       AddressType     @default(SHIPPING)
+  isDefault         Boolean         @default(false)
+  addressLine1      String
+  addressLine2      String?
+  city              String
+  state             String?
+  postalCode        String
+  country           String
+  phone             String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+}
+
+enum AddressType {
+  SHIPPING
+  BILLING
+  BOTH
+}
+
+model CustomerNote {
+  id                String          @id @default(cuid())
+  customerId        String
+  customer          Customer        @relation(fields: [customerId], references: [id])
+  note              String
+  createdById       String
+  createdBy         User            @relation(fields: [createdById], references: [id])
+  createdAt         DateTime        @default(now())
+}
+
+model CustomerGroup {
+  id                String          @id @default(cuid())
+  name              String
+  description       String?
+  customers         CustomerToGroup[]
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+}
+
+model CustomerToGroup {
+  customerId        String
+  customer          Customer        @relation(fields: [customerId], references: [id])
+  groupId           String
+  group             CustomerGroup   @relation(fields: [groupId], references: [id])
+  createdAt         DateTime        @default(now())
+
+  @@id([customerId, groupId])
+}

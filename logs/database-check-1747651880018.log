@@ -1,0 +1,48 @@
+[2025-05-19T10:51:20.022Z] Starting database check...
+[2025-05-19T10:51:20.026Z] DATABASE_URL: postgresql://neondb_owner:npg_15CbyVvkZQYT@ep-curly-glitter-a4sy2x5l-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require
+[2025-05-19T10:51:20.027Z] DIRECT_URL: postgresql://neondb_owner:npg_15CbyVvkZQYT@ep-curly-glitter-a4sy2x5l.us-east-1.aws.neon.tech/neondb?sslmode=require
+[2025-05-19T10:51:20.028Z] Testing database connection...
+[2025-05-19T10:51:20.072Z] Info: Starting a postgresql pool with 9 connections.
+[2025-05-19T10:51:23.039Z] Database connection successful!
+[2025-05-19T10:51:23.041Z] Checking Store model...
+[2025-05-19T10:51:23.596Z] Query: SELECT COUNT(*) AS "_count._all" FROM (SELECT "public"."Store"."id" FROM "public"."Store" WHERE 1=1 OFFSET $1) AS "sub"
+[2025-05-19T10:51:23.598Z] Params: [0]
+[2025-05-19T10:51:23.600Z] Duration: 544ms
+[2025-05-19T10:51:23.602Z] Found 1 stores in the database.
+[2025-05-19T10:51:24.149Z] Query: SELECT "public"."Store"."id", "public"."Store"."name", "public"."Store"."code", "public"."Store"."address", "public"."Store"."phone", "public"."Store"."email", "public"."Store"."openingHours", "public"."Store"."isActive", "public"."Store"."createdAt", "public"."Store"."updatedAt" FROM "public"."Store" WHERE 1=1 ORDER BY "public"."Store"."createdAt" DESC OFFSET $1
+[2025-05-19T10:51:24.152Z] Params: [0]
+[2025-05-19T10:51:24.154Z] Duration: 543ms
+[2025-05-19T10:51:24.157Z] Listing all stores:
+[2025-05-19T10:51:24.159Z] 1. Test Store 5/19/2025, 4:15:05 PM (STORE-4705)
+[2025-05-19T10:51:24.160Z]    ID: cmauyl07r0000ugrkpzu4gowd
+[2025-05-19T10:51:24.161Z]    Created: 2025-05-19T10:45:05.751Z
+[2025-05-19T10:51:24.162Z]    Address: 123 Test Street
+[2025-05-19T10:51:24.164Z] Creating test store with code: TEST-9524
+[2025-05-19T10:51:24.733Z] Query: INSERT INTO "public"."Store" ("id","name","code","address","phone","email","openingHours","isActive","createdAt","updatedAt") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING "public"."Store"."id", "public"."Store"."name", "public"."Store"."code", "public"."Store"."address", "public"."Store"."phone", "public"."Store"."email", "public"."Store"."openingHours", "public"."Store"."isActive", "public"."Store"."createdAt", "public"."Store"."updatedAt"
+[2025-05-19T10:51:24.735Z] Params: ["cmauyt47b0000ug8c4015tr6k","Database Test Store","TEST-9524","Test Address","555-123-4567","test@example.com","Mon-Fri: 9am-5pm",true,"2025-05-19 10:51:24.168 UTC","2025-05-19 10:51:24.168 UTC"]
+[2025-05-19T10:51:24.735Z] Duration: 556ms
+[2025-05-19T10:51:24.736Z] Test store created successfully:
+[2025-05-19T10:51:24.737Z] {
+  "id": "cmauyt47b0000ug8c4015tr6k",
+  "name": "Database Test Store",
+  "code": "TEST-9524",
+  "address": "Test Address",
+  "phone": "555-123-4567",
+  "email": "test@example.com",
+  "openingHours": "Mon-Fri: 9am-5pm",
+  "isActive": true,
+  "createdAt": "2025-05-19T10:51:24.168Z",
+  "updatedAt": "2025-05-19T10:51:24.168Z"
+}
+[2025-05-19T10:51:24.738Z] Verifying store was created...
+[2025-05-19T10:51:25.287Z] Query: SELECT "public"."Store"."id", "public"."Store"."name", "public"."Store"."code", "public"."Store"."address", "public"."Store"."phone", "public"."Store"."email", "public"."Store"."openingHours", "public"."Store"."isActive", "public"."Store"."createdAt", "public"."Store"."updatedAt" FROM "public"."Store" WHERE ("public"."Store"."id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+[2025-05-19T10:51:25.288Z] Params: ["cmauyt47b0000ug8c4015tr6k",1,0]
+[2025-05-19T10:51:25.290Z] Duration: 546ms
+[2025-05-19T10:51:25.291Z] Store verification successful!
+[2025-05-19T10:51:25.292Z] Deleting test store...
+[2025-05-19T10:51:25.847Z] Query: DELETE FROM "public"."Store" WHERE ("public"."Store"."id" = $1 AND 1=1) RETURNING "public"."Store"."id", "public"."Store"."name", "public"."Store"."code", "public"."Store"."address", "public"."Store"."phone", "public"."Store"."email", "public"."Store"."openingHours", "public"."Store"."isActive", "public"."Store"."createdAt", "public"."Store"."updatedAt"
+[2025-05-19T10:51:25.848Z] Params: ["cmauyt47b0000ug8c4015tr6k"]
+[2025-05-19T10:51:25.848Z] Duration: 551ms
+[2025-05-19T10:51:25.849Z] Test store deleted successfully.
+[2025-05-19T10:51:25.851Z] Database check completed successfully!
+[2025-05-19T10:51:25.868Z] Database connection closed.
