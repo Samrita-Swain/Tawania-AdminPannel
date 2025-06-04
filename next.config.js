@@ -15,9 +15,14 @@ const nextConfig = {
   // Fix for Vercel deployment
   experimental: {
     serverComponentsExternalPackages: ['@prisma/client', 'prisma'],
+    outputFileTracingIncludes: {
+      '/api/**/*': ['./node_modules/**/*.wasm', './node_modules/**/*.node'],
+    },
   },
   // Optimize for production
   swcMinify: true,
+  // Fix for client reference manifest issues
+  outputFileTracing: true,
   // Removed tracing option as it's not supported
 
   // Add configuration for NextAuth
